@@ -1,70 +1,75 @@
 package com.n26.controller;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.TimeZone;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.junit.Assert;
+import java.time.LocalDateTime;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.n26.exception.FutureTransactionException;
-import com.n26.entity.request.Transaction;
-import com.n26.exception.ExpiredTransactionException;
-import com.n26.service.StatisticService;
-import com.n26.validator.CommonValidator;
+import com.n26.Application;
 
-@RunWith ( MockitoJUnitRunner.class )
+@RunWith ( SpringRunner.class )
+@SpringBootTest ( webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class} )
+@ComponentScan ( basePackages = {"com.n26"} )
+@AutoConfigureMockMvc
 public class TransactionControllerTest {
 
-    @InjectMocks
-    private TransactionController transactionController;
-
-    @Mock
-    private StatisticService statisticService;
-
-    @Mock
-    private CommonValidator validator;
-
+    @Autowired
+    private MockMvc mockMvc;
+    
     @Test
-    public void testPost() throws ExpiredTransactionException, FutureTransactionException {
-        Transaction transaction = new Transaction();
-        transaction.setAmount( BigDecimal.TEN );
-        transaction.setTimestamp( convertToLocalDateTime( Instant.now().getEpochSecond() ) );
-        Mockito.doNothing().when( statisticService ).add( transaction );
-        ResponseEntity<Transaction> response = transactionController.post( transaction );
-        Assert.assertEquals( HttpStatus.CREATED, response.getStatusCode() );
+    public void testPostForSuccess() throws Exception {
+        StringBuilder json = new StringBuilder();
+        json.append( "{" );
+        json.append( "\"amount\": 5.0" );
+        json.append( "," );
+        json.append( "\"timestamp\":\"" + LocalDateTime.now().toString() + "\"" );
+        json.append( "}" );
+        this.mockMvc.perform( post( "/transactions" ).contentType( MediaType.APPLICATION_JSON ).content( json.toString() ).accept( MediaType.APPLICATION_JSON ) ).andExpect( status().isCreated() );
     }
 
     @Test
-    public void testThrowInvalidTransaction() throws ExpiredTransactionException, FutureTransactionException {
-        Transaction transaction = new Transaction();
-        transaction.setTimestamp( convertToLocalDateTime( Instant.now().getEpochSecond() ) );
-        Mockito.doThrow( ExpiredTransactionException.class ).when( statisticService ).add( transaction );
-        ResponseEntity<Transaction> response = transactionController.post( transaction );
-        Assert.assertEquals( HttpStatus.NO_CONTENT, response.getStatusCode() );
+    public void testPostForExpiredTransaction() throws Exception {
+        StringBuilder json = new StringBuilder();
+        json.append( "{" );
+        json.append( "\"amount\": 5.0" );
+        json.append( "," );
+        json.append( "\"timestamp\":\"" + LocalDateTime.now().minusMinutes( 1 ).toString() + "\"" );
+        json.append( "}" );
+        this.mockMvc.perform( post( "/transactions" ).contentType( MediaType.APPLICATION_JSON ).content( json.toString() ).accept( MediaType.APPLICATION_JSON ) ).andExpect( status().isNoContent() );
     }
 
     @Test
-    public void testDelete() throws ExpiredTransactionException {
-        ResponseEntity<String> response = transactionController.deleteAll();
-        Assert.assertEquals( HttpStatus.NO_CONTENT, response.getStatusCode() );
+    public void testPostForFutureTransaction() throws Exception {
+        StringBuilder json = new StringBuilder();
+        json.append( "{" );
+        json.append( "\"amount\": 5.0" );
+        json.append( "," );
+        json.append( "\"timestamp\":\"" + LocalDateTime.now().plusMinutes( 2 ).toString() + "\"" );
+        json.append( "}" );
+        this.mockMvc.perform( post( "/transactions" ).contentType( MediaType.APPLICATION_JSON ).content( json.toString() ).accept( MediaType.APPLICATION_JSON ) )
+                    .andExpect( status().isUnprocessableEntity() );
+    }
+    
+
+    @Test
+    public void testPostForInvalidTransaction() throws Exception {
+        StringBuilder json = new StringBuilder();
+        json.append( "{" );
+        json.append( "\"amount\": 5.0" );
+        json.append( "}" );
+        this.mockMvc.perform( post( "/transactions" ).contentType( MediaType.APPLICATION_JSON ).content( json.toString() ).accept( MediaType.APPLICATION_JSON ) )
+                    .andExpect( status().isBadRequest() );
     }
 
-    /**
-     * Convert to local date time.
-     *
-     * @param timestamp the timestamp
-     * @return the local date time
-     */
-    private LocalDateTime convertToLocalDateTime( Long timestamp ) {
-        return LocalDateTime.ofInstant( Instant.ofEpochMilli( timestamp * 1000 ), TimeZone.getDefault().toZoneId() );
-    }
 }

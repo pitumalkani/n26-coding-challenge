@@ -3,9 +3,7 @@ package com.n26.service;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,38 +22,22 @@ public class StatisticsServiceTest {
     @InjectMocks
     private StatisticService statisticService;
 
-    @Test ( expected = FutureTransactionException.class )
-    public void testFutureTransactionException() throws ExpiredTransactionException, FutureTransactionException {
-        Transaction transaction = new Transaction();
-        transaction.setAmount( BigDecimal.TEN );
-        transaction.setTimestamp( LocalDateTime.parse( Instant.now().plusSeconds( 70 ).toString(), DateTimeFormatter.ISO_DATE_TIME ) );
-        statisticService.add( transaction );
-    }
-
-    @Test ( expected = ExpiredTransactionException.class )
-    public void testInvalidTransactionException() throws ExpiredTransactionException, FutureTransactionException {
-        Transaction transaction = new Transaction();
-        transaction.setAmount( BigDecimal.TEN );
-        transaction.setTimestamp( LocalDateTime.parse( Instant.now().minusSeconds( 70 ).toString(), DateTimeFormatter.ISO_DATE_TIME ) );
-        statisticService.add( transaction );
-    }
 
     @Test
     public void testGetStatistics() throws ExpiredTransactionException, FutureTransactionException {
-        LocalDateTime dateTime = LocalDateTime.parse( Instant.now().toString(), DateTimeFormatter.ISO_DATE_TIME );
         Transaction t1 = new Transaction();
         t1.setAmount( new BigDecimal( 30.0 ) );
-        t1.setTimestamp( dateTime );
+        t1.setTimestamp( LocalDateTime.now() );
         statisticService.add( t1 );
 
         Transaction t2 = new Transaction();
         t2.setAmount( new BigDecimal( 40.0 ) );
-        t2.setTimestamp( dateTime );
+        t2.setTimestamp( LocalDateTime.now() );
         statisticService.add( t2 );
 
         Transaction t3 = new Transaction();
         t3.setAmount( new BigDecimal( 50.0 ) );
-        t3.setTimestamp( dateTime );
+        t3.setTimestamp( LocalDateTime.now() );
         statisticService.add( t3 );
 
         Statistic statistic = statisticService.getStatistics();

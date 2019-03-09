@@ -13,12 +13,12 @@ public class DateUtilTest {
 
     @Test
     public void testConvertToTimeStamp() {
-        Long timeStamp = DateUtil.convertToTimeStamp( LocalDateTime.parse( "2018-12-02T19:52:52", DateTimeFormatter.ISO_DATE_TIME ) );
-        Assert.assertEquals( Long.valueOf( 1543780372000l ), timeStamp );
+        Long timeStamp = DateUtil.convertToTimeStamp( LocalDateTime.parse( "2019-03-09T09:08:50", DateTimeFormatter.ISO_DATE_TIME ) );
+        Assert.assertEquals( Long.valueOf( 1552122530000l ), timeStamp );
     }
     @Test
     public void convertToLocalDateTime() {
-            LocalDateTime date = DateUtil.convertToLocalDateTime( LocalDateTime.parse( "2018-12-02T19:52:52", DateTimeFormatter.ISO_DATE_TIME ));
-            Assert.assertEquals(LocalDateTime.of(2018, 12, 03, 01, 22, 52), date);
+            LocalDateTime date = DateUtil.convertToLocalDateTime( LocalDateTime.parse( "2019-03-03T12:45:50", DateTimeFormatter.ISO_DATE_TIME ));
+            Assert.assertEquals(LocalDateTime.of(2019, 03, 03, 12, 45, 50), date);
     }
 }
