@@ -2,6 +2,7 @@ package com.n26.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,14 +47,18 @@ public class StatisticService {
      */
     public synchronized void add( Transaction transaction ) throws ExpiredTransactionException, FutureTransactionException {
         Long currentTimestamp = DateUtil.convertToTimeStamp( LocalDateTime.now() );
-        Long transactionTimestamp = DateUtil.convertToTimeStamp( transaction.getTimestamp() );
+        Long transactionTimestamp = DateUtil.convertToTimeStamp( LocalDateTime.parse( transaction.getTimestamp().toString(), DateTimeFormatter.ISO_DATE_TIME ) );
+        if ( transactionTimestamp + lapseTime <= currentTimestamp )
+            throw new ExpiredTransactionException();
+        if ( currentTimestamp + lapseTime <= transactionTimestamp )
+            throw new FutureTransactionException();
 
         synchronized ( LOCK ) {
             /*
              * calculates the statistics for the entire time window while fetching, it checks the current timestamp and
              * get the statistics
              **/
-            for ( Long i = currentTimestamp; i < transactionTimestamp + lapseTime; i+=1000 ) {
+            for ( Long i = currentTimestamp; i < transactionTimestamp + lapseTime; i += 1000 ) {
                 Statistic statistic = this.statistics.get( i );
 
                 if ( statistic == null ) {
@@ -61,8 +66,8 @@ public class StatisticService {
                     statistic = createStatisticsObject( i );
 
                     statistics.put( i, statistic );
-                    
-                    this.statisticTimestamps.add(i);
+
+                    this.statisticTimestamps.add( i );
 
                 }
 

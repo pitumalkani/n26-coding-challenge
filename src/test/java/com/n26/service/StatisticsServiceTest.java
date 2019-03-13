@@ -25,19 +25,20 @@ public class StatisticsServiceTest {
 
     @Test
     public void testGetStatistics() throws ExpiredTransactionException, FutureTransactionException {
+        LocalDateTime dateTimeObject = LocalDateTime.now();
         Transaction t1 = new Transaction();
         t1.setAmount( new BigDecimal( 30.0 ) );
-        t1.setTimestamp( LocalDateTime.now() );
+        t1.setTimestamp( dateTimeObject );
         statisticService.add( t1 );
 
         Transaction t2 = new Transaction();
         t2.setAmount( new BigDecimal( 40.0 ) );
-        t2.setTimestamp( LocalDateTime.now() );
+        t2.setTimestamp( dateTimeObject );
         statisticService.add( t2 );
 
         Transaction t3 = new Transaction();
         t3.setAmount( new BigDecimal( 50.0 ) );
-        t3.setTimestamp( LocalDateTime.now() );
+        t3.setTimestamp( dateTimeObject );
         statisticService.add( t3 );
 
         Statistic statistic = statisticService.getStatistics();

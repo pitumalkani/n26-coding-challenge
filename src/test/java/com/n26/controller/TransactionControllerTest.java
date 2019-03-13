@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDateTime;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +68,7 @@ public class TransactionControllerTest {
         json.append( "\"amount\": 5.0" );
         json.append( "}" );
         this.mockMvc.perform( post( "/transactions" ).contentType( MediaType.APPLICATION_JSON ).content( json.toString() ).accept( MediaType.APPLICATION_JSON ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isUnprocessableEntity() );
     }
 
 }
